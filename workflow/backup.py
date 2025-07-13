@@ -12,7 +12,6 @@ from utils.basetools import *
 import requests
 provider = GoogleGLAProvider(api_key=os.getenv("GEMINI_API_KEY"))
 model = GeminiModel('gemini-2.0-flash', provider=provider)
-# This is the function (tool) that makes the POST request
 
 def bloom_tool(user_input: str) -> str:
     """
@@ -28,10 +27,6 @@ def bloom_tool(user_input: str) -> str:
     payload = {
         "text": user_input  # ✅ Match this key to what your API expects
     }
-
-    print("\n📡 Sending request to:", api_url)
-    print("📝 Payload:", payload)
-    print("📨 Headers:", headers)
 
     try:
         response = requests.post(api_url, json=payload, headers=headers)
@@ -51,62 +46,13 @@ def bloom_tool(user_input: str) -> str:
         print("❌ Network/API error:", e)
         return f"Error: Failed to reach API: {e}"
 
-
-def web_search_tool(user_input: str) -> str:
-    """
-    Performs a web search using DuckDuckGo and returns a list of results.
-    """
-    try:
-        search_input = SearchInput(query=user_input, max_results=3)
-        search_output = search_web(search_input)
-
-        if not search_output.results:
-            return "No search results found."
-
-        # Format output for user
-        formatted_results = "\n".join(
-            [f"- {item['title']} ({item['link']})" for item in search_output.results]
-        )
-        return f"🔎 Here are the top results for your query:\n{formatted_results}"
-
-    except Exception as e:
-        return f"Error during search: {e}"
-
-class BloomSearchInput(BaseModel):
-    query: str = Field(..., description="The academic question or topic to analyze and search.")
-
-def bloom_question_search(input: BloomSearchInput) -> str:
-    user_input = input.query
-
-    # 1. Call bloom_tool
-    bloom_result_json = bloom_tool(user_input)
-    import json
-    bloom_data = json.loads(bloom_result_json) if isinstance(bloom_result_json, str) else bloom_result_json
-    bloom_level = bloom_data.get("level", "Unknown")
-
-    # 2. Question generator (optional)
-    #question = question_tool(bloom_level) if callable(question_tool) else "No sample question."
-
-    # 3. Web search
-    search_results = web_search_tool(user_input)
-
-    # 4. Compose final response
-    return (
-        f"🌱 Bloom's Taxonomy Level: **{bloom_level}**\n\n"
-        f"💡 Example Question: {question}\n\n"
-        f"{search_results}"
-    )
-
-
-
-# Create the agent
 agent = AgentClient(
     model=model,  # or whichever model you prefer
     system_prompt="""
 You are a helpful assistant.
-Use the 'bloom_question_search' to find relevant sources to the question from the user
+When the user provide a topic and a question, use the 'bloom_tool' to find and let user know the bloom level of the question, and make a question using the topic provided with a similar bloom level
 """,
-    tools=[bloom_question_search]
+    tools=[bloom_tool]
 ).create_agent()
 
 @cl.on_chat_start

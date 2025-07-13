@@ -23,13 +23,13 @@ def read_file_tool(file_path: str) -> FileContentOutput:
     # For PDF and DOCX files, it extracts and returns the text content.
 
     file_path = file_path
-
+    print(file_path)
     if not os.path.exists(file_path):
         return FileContentOutput(
             file_path=file_path,
             content="",
             success=False,
-            error_message="File not found.",
+            error_message=file_path,
         )
 
     _, file_extension = os.path.splitext(file_path)

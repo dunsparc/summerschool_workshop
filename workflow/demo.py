@@ -12,11 +12,11 @@ from utils.basetools import *
 
 provider = GoogleGLAProvider(api_key=os.getenv("GEMINI_API_KEY"))
 model = GeminiModel('gemini-2.0-flash', provider=provider)
-
+faq2=create_faq2_tool(collection_name="company1")
 agent = AgentClient(
    model=model,
    system_prompt="You are a friendly virtual assistant.Your task is to greet users in a warm, polite, and welcoming way. ",  # Replace with your system prompt
-   tools = [read_file_tool]
+   tools = [faq2]
 ).create_agent()
 
 @cl.on_message
